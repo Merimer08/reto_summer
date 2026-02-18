@@ -1,0 +1,9 @@
+[
+  {
+    "id": 1,
+    "name": "Maria",
+    "email": "admin@local",
+    "password": "$2y$10$Yo78tphc5uXarxzULY.DTO0SCuOEudFjIY3PAvYwnUSYfID2DcP4C",
+    "role": "super_admin"
+  }
+]

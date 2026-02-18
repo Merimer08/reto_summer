@@ -1,0 +1,14 @@
+﻿body {
+    background: #0b0d10;
+}
+
+.chart-container {
+    position: relative;
+    height: 260px;
+}
+
+@media (max-width: 420px) {
+    .chart-container {
+        height: 220px;
+    }
+}
