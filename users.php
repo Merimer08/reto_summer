@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
     <?php if (canManageUsers($user)): ?>
         <div class="card bg-dark border-secondary mb-3">
             <div class="card-body">
-                <h2 class="h6 mb-3">Crear usuario</h2>
+                <h2 class="h6 mb-3 text-secondary">Crear usuario</h2>
 
                 <form method="post">
                     <input type="hidden" name="action" value="create">

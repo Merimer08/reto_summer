@@ -3,6 +3,25 @@ declare(strict_types=1);
 
 require __DIR__ . '/config.php';
 
+// Auto login por cookie
+if (!currentUser() && !empty($_COOKIE['remember_user'])) {
+
+    $users = loadUsers();
+    $user = findUserByEmail($users, $_COOKIE['remember_user']);
+
+    if ($user) {
+        $_SESSION['user'] = [
+            'id' => (int)$user['id'],
+            'name' => (string)$user['name'],
+            'email' => (string)$user['email'],
+            'role' => (string)$user['role'],
+        ];
+
+        header('Location: index.php');
+        exit;
+    }
+}
+
 if (currentUser()) {
     header('Location: index.php');
     exit;
@@ -25,6 +44,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'email' => (string)$user['email'],
                 'role' => (string)$user['role'],
             ];
+
+            // recordar sesión
+            if (!empty($_POST['remember'])) {
+                setcookie(
+                    'remember_user',
+                    (string)$user['email'],
+                    time() + (60 * 60 * 24 * 30),
+                    "/",
+                    "",
+                    false,
+                    true
+                );
+            }
 
             header('Location: index.php');
             exit;
@@ -59,18 +91,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
 
             <form method="post" novalidate>
-                <label class="form-label">Email</label>
+                <label class="form-label text-secondary">Email</label>
                 <input type="email"
                        name="email"
-                       class="form-control bg-dark text-light border-secondary"
+                       class="form-control bg-black text-white border-secondary"
+                       placeholder="tu@email.com"
                        required
                        autofocus>
 
-                <label class="form-label mt-3">Contraseña</label>
+                <label class="form-label text-secondary mt-3">Contraseña</label>
                 <input type="password"
                        name="password"
-                       class="form-control bg-dark text-light border-secondary"
+                       class="form-control bg-black text-white border-secondary"
+                       placeholder="••••••••"
                        required>
+
+                <div class="form-check mt-3">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="remember"
+                           id="remember">
+                    <label class="form-check-label" for="remember">
+                        Recordarme
+                    </label>
+                </div>
 
                 <button class="btn btn-primary w-100 mt-4">
                     Entrar

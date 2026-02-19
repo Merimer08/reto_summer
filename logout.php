@@ -12,5 +12,7 @@ if (ini_get('session.use_cookies')) {
 }
 session_destroy();
 
+setcookie('remember_user', '', time() - 3600, '/');
+
 header('Location: login.php');
 exit;

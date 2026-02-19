@@ -1,14 +1,185 @@
-﻿body {
-    background: #0b0d10;
+﻿/* =========================
+   VARIABLES DARK MODE
+========================= */
+
+:root {
+    --bg: #0b0d10;
+    --card: #131720;
+    --card-2: #0f1320;
+    --border: #263042;
+    --text: #e9eef6;
+    --muted: #8b95a7;
+
+    --ok: #22c55e;
+    --bad: #ef4444;
+    --avg: #facc15;
+
+    --primary: #2b5cff;
 }
+
+
+/* =========================
+   BASE
+========================= */
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, sans-serif;
+}
+
+h1, h2, h3 {
+    font-weight: 600;
+}
+
+small {
+    color: var(--muted);
+}
+
+
+/* =========================
+   CARDS
+========================= */
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+}
+
+
+/* =========================
+   FORMULARIOS
+========================= */
+
+.form-control,
+input,
+select {
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+.form-control::placeholder {
+    color: var(--muted);
+}
+
+/* LABELS */
+.form-label {
+    color: #e9eef6 !important;
+}
+
+/* PLACEHOLDERS */
+.form-control::placeholder {
+    color: #8b95a7 !important;
+    opacity: 1;
+}
+
+/* SELECT */
+.form-select {
+    background-color: #0f1320 !important;
+    color: #e9eef6 !important;
+    border-color: #263042 !important;
+}
+
+/* OPTIONS del select */
+.form-select option {
+    background: #131720;
+    color: #e9eef6;
+}
+
+/* INPUT TEXT COLOR FIX */
+.form-control {
+    color: #e9eef6 !important;
+}
+
+.form-control:focus {
+    background: var(--card-2);
+    color: var(--text);
+    border-color: var(--primary);
+    box-shadow: none;
+}
+
+
+/* =========================
+   BOTONES
+========================= */
+
+.btn-primary {
+    background: var(--primary);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: #1f4ed8;
+}
+
+
+/* =========================
+   TABLA (modo lista)
+========================= */
+
+table {
+    color: var(--text);
+}
+
+table th {
+    color: var(--muted);
+    font-weight: 500;
+}
+
+table td {
+    border-color: var(--border);
+}
+
+
+/* =========================
+   CHART
+========================= */
 
 .chart-container {
     position: relative;
-    height: 260px;
+    height: 320px;
+    width: 100%;
 }
 
-@media (max-width: 420px) {
+@media (max-width: 480px) {
     .chart-container {
-        height: 220px;
+        height: 230px;
     }
+}
+
+
+/* =========================
+   LOGIN
+========================= */
+
+.login-card {
+    max-width: 420px;
+    margin: auto;
+    margin-top: 10vh;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+}
+
+.alert-danger {
+    background: rgba(239,68,68,.2);
+    border: 1px solid rgba(239,68,68,.4);
+    color: #ffb4b4;
+}
+
+
+/* =========================
+   TOOLTIP CHART (iOS feel)
+========================= */
+
+.chartjs-tooltip {
+    background: rgba(15,19,32,.95);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px 10px;
+    color: var(--text);
+    font-size: 12px;
 }

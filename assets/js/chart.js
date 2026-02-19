@@ -1,4 +1,6 @@
-﻿const { labels, weights, target } = window.chartData;
+const { labels, weights, target } = window.chartData;
+
+Chart.register(ChartZoom);
 
 const yearSelect = document.getElementById('filterYear');
 const monthSelect = document.getElementById('filterMonth');
