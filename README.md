@@ -324,7 +324,7 @@ npm run build
 npm run deploy
 ![alt text](image-1.png)
 
-OzWdoXBgbR5yHwKr
+GJy36XOmaXHSUhy7
 https://bzwfcjuzmcnywpzwzadl.supabase.co
 sb_publishable_z0H3IDKkpGXUlWqrPuCyFg_n8MUWaMg
 postgresql://postgres:[YOUR-PASSWORD]@db.bzwfcjuzmcnywpzwzadl.supabase.co:5432/postgres

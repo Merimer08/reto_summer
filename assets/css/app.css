@@ -183,3 +183,108 @@ table td {
     color: var(--text);
     font-size: 12px;
 }
+
+
+/* =========================
+   CHECKBOX LOGIN
+========================= */
+
+.form-check-label {
+    color: #e9eef6 !important;
+}
+
+.form-check-input {
+    background-color: #0f1320;
+    border-color: #263042;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+
+/* =========================
+   AUTH BACKGROUND
+========================= */
+
+body {
+    background:
+        radial-gradient(circle at top left, #1a2235 0%, transparent 40%),
+        radial-gradient(circle at bottom right, #111827 0%, transparent 45%),
+        #0b0d10;
+}
+
+
+/* =========================
+   LOGIN CARD PRO
+========================= */
+
+.card {
+    background: rgba(19, 23, 32, 0.85);
+    border: 1px solid #263042;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 20px 60px rgba(0,0,0,.45);
+}
+
+
+/* =========================
+   INPUTS MODERN STYLE
+========================= */
+
+.form-control {
+    background: #0f1320 !important;
+    border: 1px solid #263042 !important;
+    color: #e9eef6 !important;
+    border-radius: 10px;
+    transition: all .25s ease;
+}
+
+/* PLACEHOLDER */
+.form-control::placeholder {
+    color: #8b95a7 !important;
+}
+
+/* FOCUS EFFECT */
+.form-control:focus {
+    background: #111827 !important;
+    border-color: #2b5cff !important;
+    box-shadow: 0 0 0 3px rgba(43,92,255,.25);
+}
+
+
+.form-check-input {
+    background-color: #0f1320;
+    border-color: #3b465c;
+}
+
+.form-check-input:checked {
+    background-color: #2b5cff;
+    border-color: #2b5cff;
+}
+
+.form-check-label {
+    color: #e9eef6 !important;
+    font-weight: 500;
+}
+
+
+/* FORCE DARK BACKGROUND */
+body {
+    background:
+        radial-gradient(circle at top left, #1a2235 0%, transparent 45%),
+        radial-gradient(circle at bottom right, #121827 0%, transparent 50%),
+        #0b0d10 !important;
+    color: #e9eef6;
+}
+
+.card {
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.45);
+}

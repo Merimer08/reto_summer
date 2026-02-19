@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/config.php';
+require __DIR__ . '/../app/bootstrap.php';
 
 $user = requireLogin();
 
@@ -82,6 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="icon" type="image/x-icon" href="/m-tabla/assets/img/logo.ico">
   <title>Usuarios</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
