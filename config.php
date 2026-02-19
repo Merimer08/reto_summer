@@ -3,81 +3,82 @@ declare(strict_types=1);
 
 session_start();
 
-define('DATA_DIR', __DIR__ . '/data');
-define('USERS_FILE', DATA_DIR . '/users.json');
-define('WEIGHTS_FILE', DATA_DIR . '/weights.json');
-define('SETTINGS_FILE', DATA_DIR . '/settings.json');
-define('MAX_USERS', 15);
+/* =========================
+   ENV LOADER SIMPLE
+========================= */
+function env(string $key, ?string $default = null): ?string
+{
+    static $vars = null;
 
-function readJson(string $path, $default) {
-    if (!file_exists($path)) return $default;
-    $raw = file_get_contents($path);
-    if ($raw === false || trim($raw) === '') return $default;
-    $data = json_decode($raw, true);
-    return (json_last_error() === JSON_ERROR_NONE) ? $data : $default;
-}
+    if ($vars === null) {
+        $vars = [];
 
-function writeJson(string $path, $data): void {
-    $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-    file_put_contents($path, $json, LOCK_EX);
-}
-
-function requireLogin(): array {
-    if (!isset($_SESSION['user'])) {
-        header('Location: login.php');
-        exit;
+        $envFile = __DIR__ . '/.env';
+        if (file_exists($envFile)) {
+            $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            foreach ($lines as $line) {
+                if (str_starts_with(trim($line), '#')) continue;
+                [$k, $v] = array_map('trim', explode('=', $line, 2));
+                $vars[$k] = $v;
+            }
+        }
     }
-    return $_SESSION['user'];
+
+    return $vars[$key] ?? $default;
 }
 
-function currentUser(): ?array {
+/* =========================
+   PDO CONNECTION (singleton)
+========================= */
+
+function db(): PDO
+{
+    static $pdo = null;
+
+    if ($pdo === null) {
+
+        $dsn = sprintf(
+            'pgsql:host=%s;port=%s;dbname=%s;sslmode=require',
+            env('DB_HOST'),
+            env('DB_PORT'),
+            env('DB_NAME')
+        );
+
+        $pdo = new PDO($dsn, env('DB_USER'), env('DB_PASS'), [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]);
+    }
+
+    return $pdo;
+}
+
+/* =========================
+   AUTH
+========================= */
+
+function currentUser(): ?array
+{
     return $_SESSION['user'] ?? null;
 }
 
-function canViewAllData(array $user): bool {
-    return in_array($user['role'] ?? '', ['admin', 'super_admin'], true);
-}
-
-function canViewUsers(array $user): bool {
-    return in_array($user['role'] ?? '', ['admin', 'super_admin'], true);
-}
-
-function canManageUsers(array $user): bool {
-    return ($user['role'] ?? '') === 'super_admin';
-}
-
-function loadUsers(): array {
-    $users = readJson(USERS_FILE, []);
-    return is_array($users) ? $users : [];
-}
-
-function saveUsers(array $users): void {
-    writeJson(USERS_FILE, $users);
-}
-
-function findUserByEmail(array $users, string $email): ?array {
-    $needle = strtolower(trim($email));
-    foreach ($users as $user) {
-        if (strtolower($user['email'] ?? '') === $needle) {
-            return $user;
-        }
+function requireLogin(): array
+{
+    $u = currentUser();
+    if (!$u) {
+        header('Location: login.php');
+        exit;
     }
-    return null;
+    return $u;
 }
 
-function normalizeSettings(array $settings, int $userId): array {
-    if (array_key_exists('target', $settings) && !array_key_exists('targets', $settings)) {
-        $settings = [
-            'targets' => [
-                (string)$userId => $settings['target']
-            ]
-        ];
-        writeJson(SETTINGS_FILE, $settings);
-    }
+function canViewUsers(array $user): bool
+{
+    return in_array($user['role'], ['admin','super_admin'], true);
+}
 
-    if (!isset($settings['targets']) || !is_array($settings['targets'])) {
-        $settings['targets'] = [];
-    }
-
-    return $settings;
+function canManageUsers(array $user): bool
+{
+    return $user['role'] === 'super_admin';
 }

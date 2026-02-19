@@ -6,8 +6,17 @@ require __DIR__ . '/config.php';
 // Auto login por cookie
 if (!currentUser() && !empty($_COOKIE['remember_user'])) {
 
-    $users = loadUsers();
-    $user = findUserByEmail($users, $_COOKIE['remember_user']);
+    $stmt = db()->prepare("
+        SELECT * FROM users
+        WHERE email = :email
+        LIMIT 1
+    ");
+
+    $stmt->execute([
+        'email' => $_COOKIE['remember_user']
+    ]);
+
+    $user = $stmt->fetch();
 
     if ($user) {
         $_SESSION['user'] = [
@@ -34,10 +43,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = (string)($_POST['password'] ?? '');
 
     if ($email !== '' && $password !== '') {
-        $users = loadUsers();
-        $user = findUserByEmail($users, $email);
+        $stmt = db()->prepare("
+            SELECT * FROM users
+            WHERE email = :email
+            LIMIT 1
+        ");
 
-        if ($user && password_verify($password, (string)($user['password'] ?? ''))) {
+        $stmt->execute([
+            'email' => $email
+        ]);
+
+        $user = $stmt->fetch();
+
+        if ($user && password_verify($password, (string)$user['password'])) {
             $_SESSION['user'] = [
                 'id' => (int)$user['id'],
                 'name' => (string)$user['name'],

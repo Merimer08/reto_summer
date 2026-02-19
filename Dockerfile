@@ -14,17 +14,21 @@ RUN apt-get update && apt-get install -y \
 # ===== Apache optimizado =====
 RUN a2enmod rewrite headers expires
 
-# ===== Config PHP (ligero para producción) =====
+# ===== Config PHP (ligero para producciÃ³n) =====
 RUN echo "memory_limit=256M" > /usr/local/etc/php/conf.d/custom.ini \
  && echo "upload_max_filesize=20M" >> /usr/local/etc/php/conf.d/custom.ini \
  && echo "post_max_size=20M" >> /usr/local/etc/php/conf.d/custom.ini \
  && echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/custom.ini \
  && echo "opcache.validate_timestamps=0" >> /usr/local/etc/php/conf.d/custom.ini
 
+# ===== Data persistente =====
+RUN mkdir -p /data \
+ && chown -R www-data:www-data /data
+
 # ===== Copiar proyecto =====
 COPY . /var/www/html/
 
-# ===== Permisos (IMPORTANTÍSIMO para sqlite/json) =====
+# ===== Permisos (IMPORTANTÃSIMO para sqlite/json) =====
 RUN chown -R www-data:www-data /var/www/html \
  && chmod -R 755 /var/www/html
 

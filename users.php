@@ -10,45 +10,69 @@ if (!canViewUsers($user)) {
     exit;
 }
 
-$users = loadUsers();
+$maxUsers = 15;
+
+$stmt = db()->query("
+    SELECT id,name,email,role
+    FROM users
+    ORDER BY id
+");
+
+$users = $stmt->fetchAll();
 $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'create') {
     if (!canManageUsers($user)) {
         $error = 'No tienes permisos para crear usuarios.';
-    } elseif (count($users) >= MAX_USERS) {
-        $error = 'Límite de usuarios alcanzado.';
     } else {
-        $name = trim((string)($_POST['name'] ?? ''));
-        $email = trim((string)($_POST['email'] ?? ''));
-        $password = (string)($_POST['password'] ?? '');
-        $role = (string)($_POST['role'] ?? 'user');
+        $countStmt = db()->query("SELECT COUNT(*) FROM users");
+        $totalUsers = (int)$countStmt->fetchColumn();
 
-        if ($name === '' || $email === '' || $password === '') {
-            $error = 'Completa todos los campos.';
-        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $error = 'Email no válido.';
-        } elseif (findUserByEmail($users, $email)) {
-            $error = 'El email ya existe.';
-        } elseif (!in_array($role, ['super_admin', 'admin', 'user'], true)) {
-            $error = 'Rol no válido.';
+        if ($totalUsers >= $maxUsers) {
+            $error = 'Límite de usuarios alcanzado.';
         } else {
-            $maxId = 0;
-            foreach ($users as $u) {
-                $maxId = max($maxId, (int)($u['id'] ?? 0));
+            $name = trim((string)($_POST['name'] ?? ''));
+            $email = trim((string)($_POST['email'] ?? ''));
+            $password = (string)($_POST['password'] ?? '');
+            $role = (string)($_POST['role'] ?? 'user');
+
+            if ($name === '' || $email === '' || $password === '') {
+                $error = 'Completa todos los campos.';
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $error = 'Email no válido.';
+            } elseif (!in_array($role, ['super_admin', 'admin', 'user'], true)) {
+                $error = 'Rol no válido.';
+            } else {
+                $existsStmt = db()->prepare("SELECT 1 FROM users WHERE email = :email LIMIT 1");
+                $existsStmt->execute(['email' => $email]);
+
+                if ($existsStmt->fetch()) {
+                    $error = 'El email ya existe.';
+                } else {
+                    $stmt = db()->prepare("
+                        INSERT INTO users (name,email,password,role)
+                        VALUES (:name,:email,:password,:role)
+                    ");
+
+                    $stmt->execute([
+                        'name' => $name,
+                        'email' => $email,
+                        'password' => password_hash($password, PASSWORD_DEFAULT),
+                        'role' => $role,
+                    ]);
+
+                    $success = 'Usuario creado.';
+
+                    $stmt = db()->query("
+                        SELECT id,name,email,role
+                        FROM users
+                        ORDER BY id
+                    ");
+
+                    $users = $stmt->fetchAll();
+                }
             }
-
-            $users[] = [
-                'id' => $maxId + 1,
-                'name' => $name,
-                'email' => $email,
-                'password' => password_hash($password, PASSWORD_DEFAULT),
-                'role' => $role,
-            ];
-
-            saveUsers($users);
-            $success = 'Usuario creado.';
         }
     }
 }
@@ -145,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
                     </button>
 
                     <div class="text-secondary small mt-2">
-                        Límite de usuarios: <?= MAX_USERS ?>
+                        Límite de usuarios: <?= $maxUsers ?>
                     </div>
                 </form>
             </div>

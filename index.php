@@ -4,13 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/config.php';
 
 $user = requireLogin();
-
-$weights = readJson(WEIGHTS_FILE, []);
-$weights = is_array($weights) ? $weights : [];
-
-$settings = readJson(SETTINGS_FILE, ['targets' => []]);
-$settings = normalizeSettings(is_array($settings) ? $settings : [], (int)$user['id']);
-$target = $settings['targets'][(string)$user['id']] ?? null;
+$canViewAll = canViewUsers($user);
 
 // POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -21,49 +15,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $weight = (float)($_POST['weight'] ?? 0);
 
     if ($date !== '' && $weight > 0) {
-      $weights[] = [
-        'user_id' => (int)$user['id'],
-        'date' => $date,
-        'weight' => round($weight, 2),
-      ];
+      $stmt = db()->prepare("
+          INSERT INTO weights (user_id,date,weight)
+          VALUES (:user,:date,:weight)
+      ");
 
-      usort($weights, function ($a, $b) {
-        $dateCompare = strcmp($a['date'], $b['date']);
-        if ($dateCompare !== 0) return $dateCompare;
-        return ((int)($a['user_id'] ?? 0)) <=> ((int)($b['user_id'] ?? 0));
-      });
-      writeJson(WEIGHTS_FILE, $weights);
+      $stmt->execute([
+          'user' => $user['id'],
+          'date' => $date,
+          'weight' => round($weight, 2)
+      ]);
     }
 
   } elseif ($action === 'target') {
     $target = trim((string)($_POST['target'] ?? ''));
-    $settings['targets'][(string)$user['id']] =
-      ($target === '') ? null : round((float)$target, 2);
-    writeJson(SETTINGS_FILE, $settings);
+    $targetValue = ($target === '') ? null : round((float)$target, 2);
+
+    $stmt = db()->prepare("
+        INSERT INTO settings (user_id,target)
+        VALUES (:user,:target)
+        ON CONFLICT (user_id)
+        DO UPDATE SET target = EXCLUDED.target
+    ");
+
+    $stmt->execute([
+        'user' => $user['id'],
+        'target' => $targetValue
+    ]);
   }
 
   header('Location: ' . strtok($_SERVER["REQUEST_URI"], '?'));
   exit;
 }
 
-usort($weights, function ($a, $b) {
-  $dateCompare = strcmp($a['date'], $b['date']);
-  if ($dateCompare !== 0) return $dateCompare;
-  return ((int)($a['user_id'] ?? 0)) <=> ((int)($b['user_id'] ?? 0));
-});
+// obtener objetivo
+$stmt = db()->prepare("
+    SELECT target
+    FROM settings
+    WHERE user_id = :user
+    LIMIT 1
+");
 
-$entriesForChart = array_values(array_filter(
-  $weights,
-  fn($e) => (int)($e['user_id'] ?? 0) === (int)$user['id']
-));
+$stmt->execute([
+    'user' => $user['id']
+]);
 
-$tableEntries = canViewAllData($user) ? $weights : $entriesForChart;
+$row = $stmt->fetch();
+$target = $row['target'] ?? null;
 
-$usersById = [];
-if (canViewAllData($user)) {
-  foreach (loadUsers() as $u) {
-    $usersById[(int)$u['id']] = $u['name'] ?? ('ID ' . $u['id']);
-  }
+// obtener pesos del usuario
+$stmt = db()->prepare("
+    SELECT date, weight
+    FROM weights
+    WHERE user_id = :user
+    ORDER BY date
+");
+
+$stmt->execute([
+    'user' => $user['id']
+]);
+
+$entriesForChart = $stmt->fetchAll();
+
+if ($canViewAll) {
+    $stmt = db()->query("
+        SELECT w.user_id, w.date, w.weight, u.name
+        FROM weights w
+        LEFT JOIN users u ON u.id = w.user_id
+        ORDER BY w.date, w.user_id
+    ");
+
+    $tableEntries = $stmt->fetchAll();
+} else {
+    $tableEntries = $entriesForChart;
 }
 
 // datos para JS
@@ -191,7 +215,7 @@ $weightsData = array_map(fn($e) => (float)$e['weight'], $entriesForChart);
                             <thead>
                             <tr>
                                 <th>Fecha</th>
-                                <?php if (canViewAllData($user)): ?>
+                                <?php if ($canViewAll): ?>
                                     <th>Usuario</th>
                                 <?php endif; ?>
                                 <th class="text-end">Peso</th>
@@ -201,8 +225,8 @@ $weightsData = array_map(fn($e) => (float)$e['weight'], $entriesForChart);
                             <?php foreach (array_reverse($tableEntries) as $e): ?>
                                 <tr>
                                     <td><?= $e['date'] ?></td>
-                                    <?php if (canViewAllData($user)): ?>
-                                        <td><?= htmlspecialchars((string)($usersById[(int)($e['user_id'] ?? 0)] ?? 'Desconocido')) ?></td>
+                                    <?php if ($canViewAll): ?>
+                                        <td><?= htmlspecialchars((string)($e['name'] ?? 'Desconocido')) ?></td>
                                     <?php endif; ?>
                                     <td class="text-end"><?= $e['weight'] ?> kg</td>
                                 </tr>
